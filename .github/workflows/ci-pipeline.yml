@@ -42,7 +42,7 @@ jobs:
           context: ./
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/github-actions-demo:latest
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/github-actions-demo:latest,${{ secrets.DOCKER_HUB_USERNAME }}/github-actions-demo:${{ github.sha }}
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
@@ -52,9 +52,26 @@ jobs:
     name: Deploy to Fargate 
     needs: build_and_push
     steps:
+      - name: Check Out Repo 
+        uses: actions/checkout@v2
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-1
+
+      - name: Render Amazon ECS task definition
+        id: render-web-container
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: my-container
+          image:  ${{ secrets.DOCKER_HUB_USERNAME }}/github-actions-demo:${{ github.sha }}
+
+      - name: Deploy to Amazon ECS service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-web-container.outputs.task-definition }}
+          service: my-service
+          cluster: my-cluster

@@ -1,0 +1,30 @@
+{
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "containerDefinitions": [
+        {
+            "name": "my-container",
+            "image": "wassimkallel/github-actions-demo",
+            "essential": true,
+            "portMappings": [
+                {
+                    "containerPort": "3000",
+                    "protocol": "tcp"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/github-actions-demo",
+                    "awslogs-region": "eu-west-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+    ],
+    "networkMode": "awsvpc",
+    "memory": "1024",
+    "cpu": "512",
+    "family": "github-actions-demo"
+}
