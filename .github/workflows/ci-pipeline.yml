@@ -15,6 +15,7 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: npm install
       - run: npm test
+
   build_and_push:
     needs: test
     runs-on: ubuntu-latest
@@ -45,3 +46,15 @@ jobs:
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Fargate 
+    needs: build_and_push
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
